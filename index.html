@@ -473,7 +473,7 @@ let LESSONS={}, ORDER=[];
 let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
 let settings=store.get("rodina.settings",{voice:"",mode:"end",modeV2:true,modeV3:true,rate:0.9,lesson:"26",part:0,limits:{}});
 if(settings.name===undefined&&store.get("rodina.db",{tries:[]}).tries.length)settings.name="Rodina";   // existing reader keeps her name
-if(!settings.modeV3){settings.mode="end";settings.modeV2=true;settings.modeV3=true;store.set("rodina.settings",settings)}
+if(!settings.modeV3||!["end","para","now"].includes(settings.mode)){settings.mode="end";settings.modeV2=true;settings.modeV3=true;store.set("rodina.settings",settings)}
 settings.limits=settings.limits||{};
 const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
 const saveSettings=()=>store.set("rodina.settings",settings);
