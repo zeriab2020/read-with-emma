@@ -366,9 +366,10 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <label>Reader’s name<input id="nameSet" maxlength="30" autocomplete="off" style="font:inherit;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;max-width:100%"></label>
         <label>When she makes a mistake
           <select id="modeSel">
+            <option value="end">Don’t stop her; go over mistakes at the end of the part</option>
             <option value="para">Mark it red, then say it 3 times at the end of the paragraph</option>
             <option value="now">Say the right word right away</option>
-            <option value="end">Wait, then go over mistakes at the end</option>
+            
           </select></label>
         <label>Speaking speed
           <select id="rateSel"><option value="0.8">Slow</option><option value="0.9" selected>Normal</option><option value="1">Quick</option></select></label>
@@ -470,9 +471,9 @@ async function boot(){
 /* ================= APP ================= */
 let LESSONS={}, ORDER=[];
 let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
-let settings=store.get("rodina.settings",{voice:"",mode:"para",modeV2:true,rate:0.9,lesson:"26",part:0,limits:{}});
+let settings=store.get("rodina.settings",{voice:"",mode:"end",modeV2:true,modeV3:true,rate:0.9,lesson:"26",part:0,limits:{}});
 if(settings.name===undefined&&store.get("rodina.db",{tries:[]}).tries.length)settings.name="Rodina";   // existing reader keeps her name
-if(!settings.modeV2){settings.mode="para";settings.modeV2=true;store.set("rodina.settings",settings)}
+if(!settings.modeV3){settings.mode="end";settings.modeV2=true;settings.modeV3=true;store.set("rodina.settings",settings)}
 settings.limits=settings.limits||{};
 const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
 const saveSettings=()=>store.set("rodina.settings",settings);
@@ -654,7 +655,7 @@ function onEvents(ev){
   const errs=ev.filter(e=>e.type==="err").map(e=>units[e.i]).filter(u=>!u.num);
   if(!errs.length)return;
   const words=[...new Set(errs.map(u=>cleanWord(tokens[u.d])))];
-  hoot("oops",pick(OOPS));
+  if(settings.mode!=="end")hoot("oops",pick(OOPS));
   if(settings.mode==="now")correctNow(words,errs.map(u=>u.d));
   else if(settings.mode==="para")setStatus("Keep reading! We’ll practice the <b style=\"color:var(--err)\">red</b> words at the end of the paragraph.");
 }
