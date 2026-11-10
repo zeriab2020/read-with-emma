@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-title" content="Read with Emma">
+<meta name="theme-color" content="#2d5f8f">
+<title>Read with Emma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bree+Serif&display=swap">
+<style>
+/* Layout: one reading column; sticky "control booth" (Ferris-wheel timer, mistake lamps, teacher status) above the text; tabs for Read / Tricky words / Progress */
+:root{
+  --bg:#eef3f8; --paper:#ffffff; --ink:#14243a; --muted:#5a6b80; --line:#d3dde9;
+  --steel:#2d5f8f; --steel-soft:#dce8f4;
+  --err:#c8323c; --err-soft:#fbe3e4;
+  --ok:#1f7a4d; --ok-soft:#dcf1e5;
+  --warn:#b86a00; --warn-soft:#fbeed8;
+  --read:#9fb3c8;
+  --owl:#8a5a2b; --owl-belly:#f3d9a8; --owl-eye:#ffffff; --beak:#f0a63a; --gold:#e8a400; --sky:#dcecfb;
+  --display:"Bree Serif", Rockwell, Georgia, serif;
+  --body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1825; --paper:#172333; --ink:#e7eef7; --muted:#9aabbf; --line:#2a3a50;
+  --steel:#7fb0e0; --steel-soft:#1e3350;
+  --err:#ff6b74; --err-soft:#3d1c22;
+  --ok:#5fd39a; --ok-soft:#173527;
+  --warn:#f0a940; --warn-soft:#3a2a12; --read:#5d7088; --owl:#b07a44; --owl-belly:#5a4630; --owl-eye:#f4efe6; --beak:#f0a63a; --gold:#ffc83d; --sky:#1b2c44; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,select,input{touch-action:manipulation}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:18px 60px;display:grid;gap:16px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);font-weight:700}
+header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end;justify-content:space-between}
+header .titles{display:grid;gap:2px;min-width:0}
+header h1{font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.1}
+select,.btn{font:inherit}
+select{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;max-width:100%;font-size:1rem}
+.tabs{display:flex;gap:6px;border-bottom:1.5px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1.5px;padding:10px 12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--steel)}
+.tabs .count{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--err-soft);color:var(--err);font-size:.8rem;margin-left:4px}
+.rules{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:.85rem;padding:4px 10px;border-radius:999px;background:var(--steel-soft);color:var(--ink)}
+.parts{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.parts button{flex:0 0 auto;font:inherit;font-size:.92rem;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.parts button[aria-current="true"]{border-color:var(--steel);box-shadow:0 0 0 2px var(--steel-soft)}
+.parts button:disabled{opacity:.45;cursor:not-allowed}
+.parts .dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.parts .dot.pass{background:var(--ok)} .parts .dot.fail{background:var(--err)}
+
+.booth{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:10px 14px;align-items:center;box-shadow:0 6px 18px -12px rgba(20,36,58,.45)}
+.wheel{width:72px;height:72px}
+.wheel .spokes{transform-origin:50px 50px}
+.running .wheel .spokes{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.running .wheel .spokes{animation:none}}
+.clock{display:grid;gap:2px;min-width:0}
+.clock .t{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.clock .lim{font-size:.85rem;color:var(--muted)}
+.clock .lim button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;width:30px;height:28px;cursor:pointer}
+.over .clock .t{color:var(--err)}
+.lamps{display:grid;gap:4px;justify-items:end}
+.lamps .row{display:flex;gap:6px}
+.lamp{width:20px;height:20px;border-radius:50%;border:2px solid var(--err)}
+.lamp.on{background:var(--err)} .lamp.fourth{border-style:dashed}
+.lamps small{color:var(--muted);font-size:.8rem}
+.status{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-size:.95rem;min-height:28px;min-width:0}
+.mic{width:12px;height:12px;border-radius:50%;background:var(--line);flex:0 0 auto}
+.listening .mic{background:var(--err);animation:pulse 1.2s ease-in-out infinite}
+.speaking .mic{background:var(--steel)}
+@keyframes pulse{50%{opacity:.35}}
+.status .heard{color:var(--muted);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.controls{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+.btn{font-weight:700;border-radius:12px;padding:12px 18px;cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:1rem}
+.btn.primary{background:var(--steel);border-color:var(--steel);color:var(--paper)}
+.btn.stop{background:var(--err);border-color:var(--err);color:var(--paper)}
+/* Emma the owl, the rocket trip, stars, stickers, confetti */
+.buddy{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.owl{width:84px;height:84px;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 90%}
+.owl .lid{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);animation:blink 5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
+.owl.cheer{animation:hop .6s ease-in-out 3}
+.owl.party{animation:hop .45s ease-in-out 6}
+.owl.oops{animation:wobble .5s ease-in-out 2}
+.owl.think{transform:rotate(-8deg)}
+@keyframes hop{50%{transform:translateY(-10px) rotate(4deg)}}
+@keyframes wobble{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.bubble{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:10px 14px;font-size:1.05rem;line-height:1.35;min-width:0}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--paper);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.bubble b{color:var(--steel)}
+.scores{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.score .goalbar{width:56px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.score .goalbar i{display:block;height:100%;background:var(--ok)}
+.trip{grid-column:1/-1;position:relative;height:34px;margin:2px 4px}
+.trip .track{position:absolute;left:0;right:0;top:50%;height:8px;transform:translateY(-50%);border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 10px,transparent 10px 16px)}
+.trip .track i{display:block;height:100%;border-radius:4px;background:var(--steel);width:0;transition:width .4s ease}
+.trip .rocket{position:absolute;top:50%;left:0;font-size:26px;line-height:1;transform:translate(-50%,-50%) rotate(45deg);transition:left .4s ease}
+.trip .planet{position:absolute;right:-4px;top:50%;font-size:24px;line-height:1;transform:translateY(-50%)}
+.starsrow{font-size:2rem;letter-spacing:4px;line-height:1}
+.starsrow .off{filter:grayscale(1);opacity:.3}
+.starsrow span{display:inline-block;animation:pop .5s cubic-bezier(.3,1.6,.5,1) both}
+.starsrow span:nth-child(2){animation-delay:.2s}.starsrow span:nth-child(3){animation-delay:.4s}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.newsticker{display:flex;align-items:center;gap:12px;background:var(--paper);border:2px dashed var(--gold);border-radius:14px;padding:10px 14px}
+.newsticker .big{font-size:3rem;line-height:1;animation:pop .6s cubic-bezier(.3,1.6,.5,1) both}
+.stickergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.sticker{display:grid;justify-items:center;gap:4px;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:12px 6px;text-align:center}
+.sticker .e{font-size:2.6rem;line-height:1}
+.sticker.locked .e{filter:grayscale(1) brightness(.6);opacity:.25}
+.sticker small{font-size:.75rem;color:var(--muted)}
+.sticker.got{border-color:var(--gold);box-shadow:0 0 0 2px var(--warn-soft)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion:reduce){.owl,.owl *{animation:none!important}.trip .rocket,.trip .track i{transition:none}.starsrow span,.newsticker .big{animation:none}}
+.practice .big.red{color:var(--err)}
+.rounds{display:flex;gap:10px}
+.rounds span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.rounds span.y{background:var(--ok);border-color:var(--ok);color:var(--paper)}
+.rounds span.n{background:var(--err-soft);border-color:var(--err);color:var(--err)}
+.btn.bigtap{width:100%;font-size:1.25rem;padding:16px 18px;animation:pulse 1.4s ease-in-out infinite}
+.btn.small{padding:9px 13px;font-weight:400;font-size:.92rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.w:focus-visible,.parts button:focus-visible,.tabs button:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
+
+.page{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px clamp(16px,4vw,34px);display:grid;gap:12px}
+.page h2{font-size:1.5rem;color:var(--steel)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;font-size:.85rem;color:var(--muted)}
+.text{font-size:clamp(1.3rem,3.4vw,1.65rem);line-height:1.9;max-width:62ch}
+.text p{margin:0 0 .9em;text-indent:1.4em}
+.text h3{font-family:var(--display);font-size:1.15em;color:var(--steel);margin:.2em 0 .5em}
+.text.poem p{text-indent:0;white-space:pre-line}
+.w{cursor:pointer;border-radius:5px;padding:1px 2px;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.w.done{color:var(--read)}
+.w.cur{background:var(--steel-soft);box-shadow:0 0 0 2px var(--steel);color:var(--ink)}
+.w.err{background:var(--err-soft);color:var(--err);text-decoration:underline wavy var(--err);text-underline-offset:5px}
+.w.say{background:var(--warn-soft);color:var(--warn)}
+@media (hover:hover){.w:hover{background:var(--steel-soft)}}
+.hint{font-size:.88rem;color:var(--muted);margin:0}
+.warnbox{background:var(--warn-soft);border:1.5px solid var(--warn);border-radius:12px;padding:12px 14px}
+.warnbox p{margin:0}
+
+.result{border-radius:14px;padding:16px 18px;display:grid;gap:8px}
+.result.pass{background:var(--ok-soft);border:1.5px solid var(--ok)}
+.result.fail{background:var(--err-soft);border:1.5px solid var(--err)}
+.result h3{font-size:1.35rem} .result.pass h3{color:var(--ok)} .result.fail h3{color:var(--err)}
+.result p{margin:0}
+.missed{display:flex;flex-wrap:wrap;gap:6px}
+.missed span{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.missed b{font-weight:700} .missed i{color:var(--muted)}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.practice{background:var(--paper);border:2px solid var(--steel);border-radius:16px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center}
+.practice .big{font-family:var(--display);font-size:clamp(2.4rem,9vw,3.6rem);line-height:1.1}
+.practice .big.ok{color:var(--ok)} .practice .big.no{color:var(--err)}
+.practice .sub{color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px}
+.panel h2{font-size:1.3rem}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.85rem}
+td.word{font-weight:700;font-size:1.05rem}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.pill.pass{background:var(--ok-soft);color:var(--ok)} .pill.fail{background:var(--err-soft);color:var(--err)} .pill.mid{background:var(--warn-soft);color:var(--warn)}
+.settings label{display:grid;gap:4px;font-size:.9rem;color:var(--muted)}
+.settings .line{display:flex;flex-wrap:wrap;gap:12px}
+.settings .line>label{flex:1 1 220px}
+details summary{cursor:pointer;font-family:var(--display);font-size:1.1rem}
+ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
+.empty{color:var(--muted)}
+.lessongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.lessoncard{font:inherit;text-align:left;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:12px;cursor:pointer;display:grid;gap:4px}
+.lessoncard[aria-current="true"]{border-color:var(--steel);box-shadow:0 0 0 2px var(--steel-soft)}
+.lessoncard .n{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--steel);font-weight:700}
+.lessoncard .t{font-family:var(--display);font-size:1.05rem;line-height:1.2}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok)}
+.lessoncard .s{font-size:.8rem;color:var(--muted)}
+
+#unlock{min-height:80vh;display:grid;place-items:center}
+.unlockbox{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:12px;max-width:380px;width:100%}
+.unlockbox input{font:inherit;font-size:1.1rem;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+@media (max-width:540px){.booth{grid-template-columns:auto 1fr}.lamps{grid-column:1/-1;justify-items:start}}
+</style>
+</head>
+<body>
+<div class="wrap" id="unlock" hidden>
+  <form class="unlockbox" id="unlockForm">
+    <div class="eyebrow">Read with Emma</div>
+    <h1>Family password</h1>
+    <p class="hint" style="margin:0">Type it once. This device will remember it.</p>
+    <input id="pw" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" aria-label="Family password">
+    <button class="btn primary" type="submit">Open the lessons</button>
+    <p class="hint" id="pwMsg" style="margin:0"></p>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div class="titles">
+      <div class="eyebrow" id="lessonEyebrow">Lesson</div>
+      <h1 id="lessonTitle">Reading</h1>
+    </div>
+    <button class="btn small" id="chooseBtn" type="button">All lessons</button>
+  </header>
+
+  <section class="buddy" aria-live="polite">
+    <svg class="owl" id="owl" viewBox="0 0 100 100" role="button" tabindex="0" aria-label="Emma the owl. Tap for a joke.">
+        <path d="M22 30 L30 8 L42 24 Z M78 30 L70 8 L58 24 Z" fill="var(--owl)"/>
+        <ellipse cx="50" cy="58" rx="34" ry="36" fill="var(--owl)"/>
+        <ellipse cx="50" cy="70" rx="20" ry="22" fill="var(--owl-belly)"/>
+        <path d="M40 66 q4 4 8 0 M52 72 q4 4 8 0 M42 80 q4 4 8 0" stroke="var(--owl)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="36" cy="42" r="13" fill="var(--owl-eye)"/><circle cx="64" cy="42" r="13" fill="var(--owl-eye)"/>
+        <circle id="pupL" cx="37" cy="43" r="6" fill="var(--ink)"/><circle id="pupR" cx="63" cy="43" r="6" fill="var(--ink)"/>
+        <circle cx="39" cy="40" r="2" fill="var(--owl-eye)"/><circle cx="65" cy="40" r="2" fill="var(--owl-eye)"/>
+        <rect class="lid" x="22" y="29" width="28" height="26" rx="13" fill="var(--owl)"/><rect class="lid" x="50" y="29" width="28" height="26" rx="13" fill="var(--owl)"/>
+        <path d="M45 52 L55 52 L50 61 Z" fill="var(--beak)"/>
+        <path d="M17 58 q-6 14 6 24 M83 58 q6 14 -6 24" stroke="var(--owl)" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path d="M40 93 l-3 5 M45 94 l0 5 M55 94 l0 5 M60 93 l3 5" stroke="var(--beak)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    <div style="display:grid;gap:8px;min-width:0">
+      <div class="bubble" id="bubble">Hi there! I’m <b>Emma</b>. Ready to read? Tap me for a joke!</div>
+      <div class="scores">
+        <span class="score" title="Stars earned">⭐ <span id="starTotal">0</span></span>
+        <span class="score" title="Days in a row">🔥 <span><span id="streak">0</span> day<span id="streakS">s</span></span></span>
+        <span class="score" title="Today’s goal: pass 2 parts"><span>Today <span id="goalTxt">0/2</span></span> <span class="goalbar"><i id="goalBar"></i></span></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="warnbox" id="noSR" hidden><p><b>This browser can’t listen.</b> Use <b>Chrome</b> on an Android phone or tablet, <b>Safari</b> on an iPad, or <b>Chrome</b> or <b>Edge</b> on a computer. You can still tap words to mark mistakes by hand.</p></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabRead" aria-selected="true">Read</button>
+    <button role="tab" id="tabLessons" aria-selected="false">Lessons</button>
+    <button role="tab" id="tabWords" aria-selected="false">Tricky words <span class="count" id="trickyCount" hidden></span></button>
+    <button role="tab" id="tabStick" aria-selected="false">Stickers <span class="count" id="stickCount" style="background:var(--warn-soft);color:var(--warn)">0</span></button>
+    <button role="tab" id="tabProg" aria-selected="false">Progress</button>
+  </nav>
+
+  <!-- READ -->
+  <section id="viewRead" style="display:grid;gap:16px">
+    <div class="practice" id="micCard" hidden style="justify-items:start;text-align:left">
+      <div class="eyebrow">Before you read</div>
+      <h2 style="font-size:1.4rem">Let the teacher hear you</h2>
+      <p class="sub" id="micMsg" style="margin:0">Tap the button, then choose <b>Allow</b> when the browser asks to use the microphone.</p>
+      <div class="row-actions"><button class="btn primary" id="micBtn" type="button">Turn on the microphone</button><button class="btn small" id="micSkip" type="button" hidden>A grown-up will mark mistakes</button></div>
+    </div>
+    <form class="practice" id="nameCard" hidden style="justify-items:start;text-align:left">
+      <div class="eyebrow">Welcome to Read with Emma</div>
+      <h2 style="font-size:1.4rem">What’s the reader’s name?</h2>
+      <p class="sub" style="margin:0">Emma will use it to cheer them on. It stays on this device only.</p>
+      <div class="row-actions"><input id="nameIn" maxlength="30" autocomplete="off" aria-label="Reader’s name" placeholder="First name" style="font:inherit;font-size:1.1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-width:0;max-width:100%">
+        <button class="btn primary" type="submit">Save</button><button class="btn small" id="nameSkip" type="button">Skip</button></div>
+    </form>
+    <div class="rules">
+      <span class="chip">Pass: 3 mistakes or fewer</span>
+      <span class="chip">Finish within the time on the wheel</span>
+      <span class="chip">Pass a part to open the next one</span>
+    </div>
+    <nav class="parts" id="parts" aria-label="Parts of the story"></nav>
+
+    <section class="booth" id="booth" aria-label="Timer, mistakes and teacher">
+      <svg class="wheel" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--line)" stroke-width="7"/>
+        <circle id="rim" cx="50" cy="50" r="42" fill="none" stroke="var(--steel)" stroke-width="7" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9" transform="rotate(-90 50 50)"/>
+        <g class="spokes" stroke="var(--muted)" stroke-width="1.6" id="spokes"></g>
+        <circle cx="50" cy="50" r="5" fill="var(--steel)"/>
+      </svg>
+      <div class="clock">
+        <div class="t" id="time">0:00</div>
+        <div class="lim">Limit <span id="limit">2:00</span>
+        </div>
+      </div>
+      <div class="lamps"><div class="row" id="lamps" aria-hidden="true"></div><small id="errText">0 mistakes</small></div>
+      <div class="trip" aria-hidden="true"><div class="track"><i id="tripFill"></i></div><span class="planet">🪐</span><span class="rocket" id="rocket">🚀</span></div>
+      <div class="status" id="status"><span class="mic"></span><span id="statusText">Press <b>Start reading</b>, then read out loud.</span><span class="heard" id="heard"></span></div>
+      <div class="controls">
+        <button class="btn primary" id="startBtn" type="button">Start reading</button>
+        <button class="btn" id="doneBtn" type="button" disabled>Finished</button>
+        <button class="btn small" id="modelBtn" type="button">Hear it read first</button>
+        <button class="btn small" id="undoBtn" type="button" disabled>Undo last mark</button>
+        <button class="btn primary bigtap" id="resumeMic" type="button" hidden>🎤 Tap to keep reading</button>
+      </div>
+    </section>
+
+    <div class="warnbox" id="deafBox" hidden><p><b>The teacher can’t hear her.</b> No words are coming through the microphone. Pause, make sure the microphone is allowed for this page, then press <b>Keep reading</b>. Until the teacher can hear, mistakes aren’t counted and she can’t pass.</p></div>
+    <div id="reviewBox" hidden aria-live="polite"></div>
+    <div id="resultBox" hidden></div>
+    <div id="practiceBox" hidden></div>
+
+    <article class="page">
+      <h2 id="partTitle"></h2>
+      <div class="meta" id="partMeta"></div>
+      <div class="text" id="text"></div>
+      <p class="hint">Tap a word to hear it. While she is reading, tapping a word marks it wrong (or removes a wrong mark) if the teacher misheard her.</p>
+    </article>
+
+    <details class="panel" id="questions">
+      <summary>After reading: questions</summary>
+      <ol class="q" id="qList"></ol>
+    </details>
+  </section>
+
+  <!-- LESSONS -->
+  <section id="viewLessons" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Lessons 51–77 · Stories</h2>
+      <div class="lessongrid" id="lessonGrid"></div>
+    </div>
+  </section>
+
+  <!-- TRICKY WORDS -->
+  <section id="viewWords" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Tricky words</h2>
+      <p class="hint" style="margin:0">Every word that was misread. A word is <b>learned</b> after she says it right in practice 2 times.</p>
+      <div class="row-actions">
+        <button class="btn primary" id="practiceAllBtn" type="button">Practice tricky words</button>
+        <label class="hint"><input type="checkbox" id="showLearned"> Show learned words</label>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Word</th><th>Missed</th><th>She said</th><th>Last time</th><th>Practice</th><th></th></tr></thead>
+        <tbody id="wordRows"></tbody>
+      </table></div>
+    </div>
+    <div id="practiceBox2" hidden></div>
+  </section>
+
+  <!-- STICKERS -->
+  <section id="viewStick" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Sticker book</h2>
+      <p class="hint" style="margin:0">Finish every part of a lesson to win its sticker. Can you collect all of them?</p>
+      <div class="stickergrid" id="stickerGrid"></div>
+    </div>
+  </section>
+  <canvas id="confetti" hidden></canvas>
+
+  <!-- PROGRESS -->
+  <section id="viewProg" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Every try</h2>
+      <div class="row-actions">
+        <button class="btn primary" id="shareBtn" type="button">Send progress</button>
+        <button class="btn small" id="exportBtn" type="button">Download records (CSV)</button>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Date</th><th>Lesson · Part</th><th>Time</th><th>Mistakes</th><th>Result</th><th>Missed words</th></tr></thead>
+        <tbody id="tryRows"></tbody>
+      </table></div>
+    </div>
+    <div class="panel settings">
+      <h2>Teacher settings</h2>
+      <div class="line">
+        <label>Teacher voice (American English)<select id="voiceSel"></select></label>
+        <label>Reader’s name<input id="nameSet" maxlength="30" autocomplete="off" style="font:inherit;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;max-width:100%"></label>
+        <label>When she makes a mistake
+          <select id="modeSel">
+            <option value="para">Mark it red, then say it 3 times at the end of the paragraph</option>
+            <option value="now">Say the right word right away</option>
+            <option value="end">Wait, then go over mistakes at the end</option>
+          </select></label>
+        <label>Speaking speed
+          <select id="rateSel"><option value="0.8">Slow</option><option value="0.9" selected>Normal</option><option value="1">Quick</option></select></label>
+      </div>
+      <div class="row-actions" id="folderRow">
+        <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
+        <span class="hint" id="folderState"></span>
+      </div>
+      <p class="hint" style="opacity:.7">App version: 10 Oct 2026 · 19:00 (American English)</p>
+      <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const ENC = {"salt": "qX3HivmpbGwhZz1sEoqFpw==", "iv": "FU5oOnk63qwdmbo5", "iter": 150000, "z": 1, "ct": "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"};
+const MAX_ERR = 3;
+
+/* ================= ALIGNER START ================= */
+const COMMON = new Set("a an the and to of in on at it is was he she they we i you his her as or but for so be by from with that this would were had has".split(" "));
+const NUMWORDS = new Set("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million and oh".split(" "));
+const US_WORDS={centre:"center",centres:"centers",theatre:"theater",theatres:"theaters",metre:"meter",metres:"meters",litre:"liter",litres:"liters",fibre:"fiber",grey:"gray",greys:"grays",mum:"mom",mums:"moms",plough:"plow",ploughed:"plowed",tyre:"tire",tyres:"tires",cheque:"check",kerb:"curb",aluminium:"aluminum",aeroplane:"airplane",aeroplanes:"airplanes",jewellery:"jewelry",pyjamas:"pajamas",cosy:"cozy",moustache:"mustache",sceptical:"skeptical",manoeuvre:"maneuver",programme:"program",catalogue:"catalog",dialogue:"dialog",defence:"defense",offence:"offense",licence:"license",practise:"practice",practised:"practiced",learnt:"learned",spelt:"spelled",dreamt:"dreamed",whilst:"while",amongst:"among",towards:"toward",storey:"story",storeys:"stories",draught:"draft",gaol:"jail",colour:"color",favourite:"favorite"};
+function usSpell(w){if(US_WORDS[w])return US_WORDS[w];
+  return w.replace(/^(col|fav|hon|harb|lab|neighb|behavi|flav|hum|rum|vap|arm|parl|sav|splend|clam|od|val|vig|ard|endeav|glam)our(s|ed|ing|ite|ites|ful|less|able)?$/,"$1or$2")
+          .replace(/^(travel|cancel|label|model|signal|quarrel|marvel|jewel|tunnel|level|shovel|duel|fuel|channel|counsel|dial|total|panel|pedal|rival|snorkel|towel|yodel)l(ed|ing|er|ers)$/,"$1$2")
+          .replace(/^(real|recogn|organ|apolog|critic|memor|sympath|emphas|summar|categor|harmon|agon|special|civil|colon|fertil|final|global|hospital|ideal|legal|local|minim|maxim|mobil|modern|neutral|normal|optim|personal|polar|popular|prior|standard|stabil|vapor|vocal|author|capital|character|familiar|general|human|immun|industrial|journal|magnet|natural|patron|plagiar|rational|scrut|terror|theor|tranquil|visual|item|util|vandal|mesmer|hypnot|baptiz|jeopard|fantas|energ|amort|cauter|desens)is(e|es|ed|ing|ation|ations|er|ers)$/,"$1iz$2")}
+function norm(s){return usSpell(String(s).toLowerCase().replace(/[’'`]/g,"").replace(/[^a-z0-9]/g,""))}
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function similar(heard,exp){
+  if(heard===exp)return true;
+  const L=Math.max(heard.length,exp.length);
+  if(exp.endsWith("s")&&heard===exp.slice(0,-1)&&exp.length>=6)return true;
+  if(L>=9)return lev(heard,exp)<=2;
+  if(L>=6)return lev(heard,exp)<=1;
+  return false;
+}
+function isNumWord(h){return /^\d+$/.test(h)||NUMWORDS.has(h)}
+function makeUnits(tokens){const u=[];tokens.forEach((t,d)=>{t.split(/[-—]/).forEach(p=>{const n=norm(p);if(n)u.push({n,d,num:/\d/.test(n)})})});return u}
+function newState(){return {pos:0,buffer:[],marks:new Map()}}
+function cloneState(s){return {pos:s.pos,buffer:s.buffer.slice(),marks:new Map(s.marks)}}
+function feed(units,st,raw){
+  const h=norm(raw);if(!h)return [];
+  const events=[];
+  for(let b=1;b<=8;b++){const pu=units[st.pos-b];if(pu&&!pu.num&&similar(h,pu.n)&&!(units[st.pos]&&similar(h,units[st.pos].n)))return events}
+  const LOOK=5;let found=-1;
+  for(let k=0;k<=LOOK;k++){const u=units[st.pos+k];if(!u)break;
+    const match=u.num?isNumWord(h):similar(h,u.n);
+    if(match){ if(k>=2&&COMMON.has(h))continue; found=k;break;}
+  }
+  if(found>=0){
+    for(let k=0;k<found;k++){const i=st.pos+k,u=units[i];
+      if(u.num){st.marks.set(i,{s:"ok"});continue}
+      st.marks.set(i,{s:"err",heard:st.buffer.join(" ")});events.push({type:"err",i});}
+    const i=st.pos+found;st.marks.set(i,{s:"ok"});events.push({type:"ok",i});
+    st.pos=i+1;st.buffer=[];
+  }else{
+    const u=units[st.pos];
+    if(u&&u.num&&isNumWord(h))return events;
+    if(st.pos>0&&units[st.pos-1].num&&isNumWord(h))return events;
+    st.buffer.push(h);
+    if(st.buffer.length>=3&&u){
+      st.marks.set(st.pos,{s:u.num?"ok":"err",heard:st.buffer.join(" ")});
+      if(!u.num)events.push({type:"err",i:st.pos});
+      st.pos++;st.buffer=[];
+    }
+  }
+  return events;
+}
+function feedText(units,st,text){const ev=[];String(text).split(/[\s\-—]+/).forEach(w=>ev.push(...feed(units,st,w)));return ev}
+function scoreAlt(units,st,text){const c=cloneState(st);const ev=feedText(units,c,text);return ev.reduce((a,e)=>a+(e.type==="ok"?1:-1.5),0)}
+/* ================= ALIGNER END ================= */
+
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ================= UNLOCK ================= */
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decryptWith(pw){
+  const enc=new TextEncoder();
+  const base=await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(ENC.salt),iterations:ENC.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(ENC.iv)},key,b64(ENC.ct));
+  const raw=ENC.z?await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer():plain;
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+async function boot(){
+  if(DATA){start(DATA);return}
+  const saved=store.get("rodina.pw","");
+  if(saved){try{start(await decryptWith(saved));return}catch(e){}}
+  $("unlock").hidden=false;
+  $("unlockForm").onsubmit=async e=>{e.preventDefault();$("pwMsg").textContent="Opening…";
+    const pw=$("pw").value.trim();
+    try{const d=await decryptWith(pw);store.set("rodina.pw",pw);$("unlock").hidden=true;start(d)}
+    catch(err){$("pwMsg").textContent="That password didn’t work. Check it and try again."}};
+}
+
+/* ================= APP ================= */
+let LESSONS={}, ORDER=[];
+let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
+let settings=store.get("rodina.settings",{voice:"",mode:"para",modeV2:true,rate:0.9,lesson:"26",part:0,limits:{}});
+if(settings.name===undefined&&store.get("rodina.db",{tries:[]}).tries.length)settings.name="Rodina";   // existing reader keeps her name
+if(!settings.modeV2){settings.mode="para";settings.modeV2=true;store.set("rodina.settings",settings)}
+settings.limits=settings.limits||{};
+const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
+const saveSettings=()=>store.set("rodina.settings",settings);
+const NM=()=>settings.name?", "+settings.name:"";
+function greet(){$("bubble").innerHTML=`Hi${settings.name?" "+esc(settings.name):" there"}! I’m <b>Emma</b>. Ready to read? Tap me for a joke!`}
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function saveName(v){settings.name=String(v||"").trim().slice(0,30);saveSettings();$("nameCard").hidden=true;$("nameSet").value=settings.name;greet()}
+
+let voices=[];
+const isUS=v=>/^en[-_]us$/i.test(v.lang||"");
+function loadVoices(){const all=(speechSynthesis.getVoices()||[]);const us=all.filter(isUS);
+  voices=us.length?us:all.filter(v=>/^en/i.test(v.lang||""));   // American English voices only (any English only if the device has none)
+  const sel=$("voiceSel");sel.innerHTML="";
+  const rank=v=>(/natural|online|enhanced|premium/i.test(v.name)?0:/samantha|ava|allison|google us|microsoft (aria|jenny|zira)/i.test(v.name)?1:2)+(isUS(v)?0:5);
+  voices.sort((a,b)=>rank(a)-rank(b));
+  voices.forEach(v=>{const o=document.createElement("option");o.value=v.name;o.textContent=`${v.name} (${v.lang})`;sel.appendChild(o)});
+  if(!voices.length){const o=document.createElement("option");o.textContent="Default voice";sel.appendChild(o)}
+  if(settings.voice&&voices.some(v=>v.name===settings.voice))sel.value=settings.voice;else if(voices[0]){settings.voice=voices[0].name;sel.value=voices[0].name;saveSettings()}
+}
+function speak(text,rate){return new Promise(res=>{
+  if(!("speechSynthesis" in window))return res();
+  let done=false;const fin=()=>{if(!done){done=true;res()}};
+  setTimeout(fin,Math.max(4000,text.length*140));
+  let u;try{u=new SpeechSynthesisUtterance(text);const v=voices.find(v=>v.name===settings.voice)||voices[0];u.lang="en-US";if(v&&isUS(v)){try{u.voice=v}catch(e){}}
+  u.rate=rate||Number(settings.rate)||0.9;u.pitch=1.05;u.onend=fin;u.onerror=fin;}catch(e){return fin()}
+  if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(()=>speechSynthesis.speak(u),120)}else speechSynthesis.speak(u);
+})}
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const IS_ANDROID=/Android/i.test(navigator.userAgent);
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
+let L="26",cur=0;
+let tokens=[],units=[],st=newState(),view=[];
+let manual=new Map(),history=[];
+let reviewCredit={};
+let paraOfD=[],paraLastUnit={},reviewedParas=new Set(),reviewing=false,reviewToken=0;
+let muteUntil=0,recSess=0,recOk=false;const tainted=new Set();
+let running=false,elapsed=0,t0=0,tick=null,teacherTalking=false,listening=false,rec=null,wake=null,ended=false,heardAny=false,deafTimer=null;
+
+const P=()=>LESSONS[L].parts[cur];
+const key=()=>L+":"+cur;
+const limitOf=()=>P().limit;   // fixed by the lesson; cannot be changed
+const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const passedPart=(l,i)=>DB.tries.some(r=>r.lesson===l&&r.part===i&&r.pass);
+const unlocked=i=>i===0||passedPart(L,i-1);
+const lessonDone=l=>LESSONS[l].parts.every((_,i)=>passedPart(l,i));
+const lessonPassedCount=l=>LESSONS[l].parts.filter((_,i)=>passedPart(l,i)).length;
+
+function start(data){
+  LESSONS=data.lessons;ORDER=Object.keys(LESSONS).sort((a,b)=>a-b);
+  $("app").hidden=false;
+  if(!SR)$("noSR").hidden=false;
+  if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+  L=LESSONS[settings.lesson]?settings.lesson:ORDER[0];
+  cur=Math.min(settings.part||0,LESSONS[L].parts.length-1);
+  while(cur>0&&!unlocked(cur))cur--;
+  const sp=$("spokes");for(let i=0;i<12;i++){const a=i*Math.PI/6;const l=document.createElementNS("http://www.w3.org/2000/svg","line");l.setAttribute("x1",50);l.setAttribute("y1",50);l.setAttribute("x2",50+38*Math.cos(a));l.setAttribute("y2",50+38*Math.sin(a));sp.appendChild(l);
+    const c=document.createElementNS("http://www.w3.org/2000/svg","rect");c.setAttribute("x",50+44*Math.cos(a)-3);c.setAttribute("y",50+44*Math.sin(a)-3);c.setAttribute("width",6);c.setAttribute("height",6);c.setAttribute("rx",1.5);c.setAttribute("fill","var(--steel)");sp.appendChild(c)}
+  wire();
+  if(!window.showDirectoryPicker)$("folderRow").hidden=true;
+  else idbGet("dir").then(h=>{dirHandle=h||null;showFolderState()});
+  renderAll();
+}
+
+function renderHeader(){
+  const les=LESSONS[L];
+  $("lessonEyebrow").textContent=`Read with Emma · Lesson ${L} · ${les.kind}`;$("lessonTitle").textContent=les.title;
+  $("qList").innerHTML=(les.questions||[]).map(q=>`<li>${q}</li>`).join("");
+  $("questions").hidden=!(les.questions||[]).length;
+}
+function renderLessons(){
+  $("lessonGrid").innerHTML=ORDER.map(l=>{const les=LESSONS[l],n=les.parts.length,p=lessonPassedCount(l);
+    return `<button class="lessoncard" type="button" data-l="${l}" aria-current="${l===L}"><span class="n">Lesson ${l}${p===n?" · done ✓":""}</span><span class="t">${les.title}</span><span class="bar"><i style="width:${Math.round(p/n*100)}%"></i></span><span class="s">${p} of ${n} parts passed</span></button>`}).join("");
+  $("lessonGrid").querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{if(running)return;L=b.dataset.l;cur=0;
+    while(cur<LESSONS[L].parts.length-1&&passedPart(L,cur))cur++;
+    settings.lesson=L;settings.part=cur;saveSettings();resetAttempt();renderAll();showTab("tabRead");scrollTo({top:0})});
+}
+function renderParts(){const nav=$("parts");nav.innerHTML="";
+  LESSONS[L].parts.forEach((p,i)=>{const b=document.createElement("button");b.type="button";
+    const tries=DB.tries.filter(r=>r.lesson===L&&r.part===i);const passed=tries.some(r=>r.pass);const open=unlocked(i);
+    b.innerHTML=`<span class="dot ${passed?"pass":tries.length?"fail":""}"></span>${i+1}. ${p.title}${open?"":" 🔒"}`;
+    b.setAttribute("aria-current",i===cur?"true":"false");b.disabled=!open;if(!open)b.title="Pass the part before to open this one";
+    b.onclick=()=>{if(running||!open)return;cur=i;settings.part=i;saveSettings();resetAttempt();renderAll()};nav.appendChild(b)})}
+function renderText(){
+  const p=P();
+  $("partTitle").textContent=`Part ${cur+1} of ${LESSONS[L].parts.length}`+(p.title.startsWith("Part ")?"":` · ${p.title}`);
+  $("partMeta").innerHTML=`<span>${p.words} words</span><span>·</span><span>${p.level}</span><span>·</span><span id="limMeta">Time limit ${fmt(limitOf())}</span>`;
+  const box=$("text");box.innerHTML="";box.classList.toggle("poem",!!LESSONS[L].poem);tokens=[];view=[];paraOfD=[];
+  p.paras.forEach((par,pi)=>{
+    if(par.startsWith("## ")){const h=document.createElement("h3");h.textContent=par.slice(3);box.appendChild(h);return}
+    const el=document.createElement("p");
+    par.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){el.appendChild(document.createTextNode(tok));return}
+      tok.split(/(—)/).forEach(piece=>{if(!piece)return;if(piece==="—"){el.appendChild(document.createTextNode("—"));return}
+        const d=tokens.length;tokens.push(piece);paraOfD[d]=pi;
+        const s=document.createElement("span");s.className="w";s.textContent=piece;s.tabIndex=0;s.setAttribute("role","button");
+        s.onclick=()=>tapWord(d);s.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tapWord(d)}};
+        el.appendChild(s);view[d]=s})});
+    box.appendChild(el)});
+  units=makeUnits(tokens);
+  paraLastUnit={};units.forEach((u,i)=>{paraLastUnit[paraOfD[u.d]]=i});
+}
+function wordStatus(stt){const res=new Array(tokens.length).fill(null);const heard=new Array(tokens.length).fill("");
+  stt.marks.forEach((m,i)=>{const d=units[i].d;if(m.s==="err"){res[d]="err";heard[d]=m.heard||""}else if(res[d]!=="err")res[d]="ok"});
+  manual.forEach((v,d)=>{res[d]=v});return {res,heard}}
+const cleanWord=t=>t.replace(/[^\w’'-]/g,"").replace(/^[’']+|[’']+$/g,"");
+function mistakes(){const {res,heard}=wordStatus(st);const out=[];res.forEach((s,d)=>{if(s==="err")out.push({d,word:cleanWord(tokens[d]),heard:heard[d]})});return out}
+function paint(previewState){
+  const s=previewState||st;const {res}=wordStatus(s);moveRocket(s.pos);
+  const curD=units[s.pos]?units[s.pos].d:-1;
+  view.forEach((el,d)=>{el.classList.toggle("done",res[d]==="ok");el.classList.toggle("err",res[d]==="err");el.classList.toggle("cur",(running||listening)&&d===curD)});
+  if(running&&curD>=0&&view[curD]){const r=view[curD].getBoundingClientRect();const top=$("booth").getBoundingClientRect().bottom;
+    if(r.top<top+10||r.bottom>innerHeight-40)view[curD].scrollIntoView({block:"center",behavior:"smooth"})}
+  renderBooth();
+}
+function renderBooth(){
+  const n=mistakes().length,lim=limitOf();
+  $("limit").textContent=fmt(lim);$("time").textContent=fmt(elapsed);
+  const frac=Math.min(1,elapsed/lim);$("rim").setAttribute("stroke-dashoffset",263.9*(1-frac));
+  $("rim").setAttribute("stroke",elapsed>lim?"var(--err)":elapsed>lim*0.8?"var(--warn)":"var(--steel)");
+  const b=$("booth");b.classList.toggle("over",elapsed>lim);b.classList.toggle("running",running);
+  $("status").classList.toggle("listening",listening&&!teacherTalking);$("status").classList.toggle("speaking",teacherTalking);
+  const lamps=$("lamps");lamps.innerHTML="";for(let i=0;i<Math.max(MAX_ERR+1,n);i++){const d=document.createElement("span");d.className="lamp"+(i<n?" on":"")+(i>=MAX_ERR?" fourth":"");lamps.appendChild(d)}
+  $("errText").textContent=`${n} mistake${n===1?"":"s"}${n>MAX_ERR?" · too many":""}`;
+  const sb=$("startBtn");sb.textContent=running?"Pause":(elapsed>0?"Keep reading":"Start reading");sb.className="btn "+(running?"stop":"primary");
+  $("doneBtn").disabled=(elapsed===0&&!running)||(reviewing&&!running);sb.disabled=reviewing&&!running;$("undoBtn").disabled=history.length===0;
+}
+function renderAll(){renderHeader();renderLessons();renderParts();renderText();paint();renderWords();renderTries();renderFun()}
+function setStatus(html){$("statusText").innerHTML=html}
+
+function tapWord(d){
+  if(running||elapsed>0){const {res}=wordStatus(st);const now=res[d]==="err";manual.set(d,now?"ok":"err");history.push(d);paint()}
+  else speak(cleanWord(tokens[d]),0.8);
+}
+
+/* ---------- listening ---------- */
+function startRec(){
+  if(!SR)return;
+  rec=new SR();rec.lang="en-US";rec.continuous=!IS_ANDROID;rec.interimResults=true;rec.maxAlternatives=3;
+  const me=rec;recSess++;recOk=false;
+  rec.onstart=()=>{if(me===rec)recOk=true};
+  rec.onresult=e=>{
+    if(me!==rec)return;
+    const muted=teacherTalking||Date.now()<muteUntil;   // the mic is hearing the teacher, not the reader
+    let interim="",fresh=false;
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];const k=recSess+":"+i;
+      if(muted){tainted.add(k);continue}
+      if(tainted.has(k))continue;               // a phrase that began while the teacher was talking
+      fresh=true;
+      if(r.isFinal){
+        let best=r[0].transcript,bs=-1e9;for(let a=0;a<r.length;a++){const sc=scoreAlt(units,st,r[a].transcript);if(sc>bs){bs=sc;best=r[a].transcript}}
+        const ev=feedText(units,st,best);
+        $("heard").textContent="“"+best.trim()+"”";
+        onEvents(ev);
+      }else interim+=r[0].transcript;
+    }
+    if(!fresh)return;
+    heardAny=true;$("deafBox").hidden=true;
+    if(interim){const c=cloneState(st);feedText(units,c,interim);paint(c);$("heard").textContent="“"+interim.trim()+"”"}else paint();
+    if(st.pos>=units.length&&!ended){ended=true;setTimeout(()=>finish(),600)}
+    else checkParagraphs();
+  };
+  rec.onerror=e=>{if(me!==rec)return;const er=e.error;
+    if(er==="no-speech"||er==="aborted")return;
+    if((er==="not-allowed"||er==="service-not-allowed")&&recOk&&running){needTap();return}   // was listening, got cut off
+    if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus(micErrorText(er));$("micMsg").innerHTML=micErrorText(er);return}
+    if(er==="network"){setStatus("The listening service needs an internet connection.");return}
+    setStatus("Listening problem ("+er+"). Press <b>Start reading</b> to try again.")};
+  rec.onend=()=>{if(me===rec&&listening&&running){setTimeout(()=>{if(me!==rec||!listening||!running)return;try{recSess++;rec.start()}catch(_){needTap()}},IS_ANDROID?40:200)}};
+  try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){needTap()}
+}
+function needTap(){   // the browser needs a new tap before it will listen again (iPad/iPhone)
+  if(!running)return;
+  listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null;
+  pauseClock();$("resumeMic").hidden=false;
+  setStatus(teacherTalking?"Teacher is talking…":"Tap the big button and keep reading.");renderBooth();
+}
+function stopRec(){listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null}
+function onEvents(ev){
+  const errs=ev.filter(e=>e.type==="err").map(e=>units[e.i]).filter(u=>!u.num);
+  if(!errs.length)return;
+  const words=[...new Set(errs.map(u=>cleanWord(tokens[u.d])))];
+  hoot("oops",pick(OOPS));
+  if(settings.mode==="now")correctNow(words,errs.map(u=>u.d));
+  else if(settings.mode==="para")setStatus("Keep reading! We’ll practice the <b style=\"color:var(--err)\">red</b> words at the end of the paragraph.");
+}
+async function correctNow(words,ds){
+  if(teacherTalking)return;
+  teacherTalking=true;pauseClock();if(IS_IOS){listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null}
+  ds.forEach(d=>view[d]&&view[d].classList.add("say"));
+  setStatus(`Teacher: the word is <b>${words.join(", ")}</b>`);renderBooth();
+  const line=words.length===1?`Careful. This word is: ${words[0]}. Say it with me: ${words[0]}.`:`Careful. These words are: ${words.join(", ")}.`;
+  await speak(line);await speak("Now keep going.");
+  ds.forEach(d=>view[d]&&view[d].classList.remove("say"));
+  muteUntil=Date.now()+350;teacherTalking=false;
+  if(running){
+    if(listening){resumeClock();setStatus("Listening… keep reading.")}
+    else if(IS_IOS||!$("resumeMic").hidden)needTap();
+    else{startRec();if(listening){resumeClock();setStatus("Listening… keep reading.")}}
+  }
+  renderBooth();
+}
+
+
+/* ---------- end-of-paragraph review: say each red word 3 times with Emma ---------- */
+function wrongWordsIn(paras){const set=new Set(paras);const out=[];const seen=new Set();
+  mistakes().forEach(m=>{if(!set.has(paraOfD[m.d]))return;const w=m.word.replace(/[’']s$/,"");const k=w.toLowerCase();if(w&&!seen.has(k)){seen.add(k);out.push(w)}});return out}
+function finishedParas(all){const out=[];for(const k in paraLastUnit){const pi=+k;if(reviewedParas.has(pi))continue;if(all||paraLastUnit[pi]<st.pos)out.push(pi)}return out}
+async function checkParagraphs(){
+  if(settings.mode!=="para"||reviewing||!running||teacherTalking)return;
+  const done=finishedParas(false);if(!done.length)return;
+  done.forEach(pi=>reviewedParas.add(pi));
+  const words=wrongWordsIn(done);
+  if(!words.length){hoot("cheer",pick(["Perfect paragraph! Keep going!","No red words! Super!","That paragraph was great!"]));return}
+  reviewing=true;const tok=++reviewToken;
+  pauseClock();listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null;
+  setStatus("Paragraph done! Let’s practice the red words.");renderBooth();
+  await reviewWords(words,tok);
+  reviewing=false;
+  if(tok!==reviewToken||!running)return;
+  hoot("cheer","Great practice! Now keep reading.");
+  if(SR&&IS_IOS){needTap();setStatus("Tap the big button and keep reading.")}
+  else{if(SR)startRec();muteUntil=Date.now()+300;resumeClock();setStatus(SR?"Listening… keep reading.":"Timing. Tap any word she reads wrong.");paint()}
+}
+async function reviewWords(words,tok){
+  const box=$("reviewBox");box.hidden=false;
+  if(SR&&!IS_IOS)pEarStart();
+  const alive=()=>tok===reviewToken;
+  for(let wi=0;wi<words.length&&alive();wi++){const w=words[wi];const marks=[];let skip=false;
+    const draw=(sub,cls,tap)=>{if(!alive())return;
+      box.innerHTML=`<div class="practice review"><div class="eyebrow">Say it 3 times with Emma · word ${wi+1} of ${words.length}</div>
+        <div class="big ${cls||"red"}">${w}</div>
+        <div class="rounds" aria-label="${marks.filter(Boolean).length} of 3 said right">${[0,1,2].map(i=>`<span class="${i<marks.length?(marks[i]?"y":"n"):""}">${i<marks.length?(marks[i]?"✓":"•"):i+1}</span>`).join("")}</div>
+        <div class="sub">${sub}</div><div class="row-actions"><button class="btn small" id="rHear" type="button">Hear it</button><button class="btn small" id="rSkip" type="button">Skip this word</button></div></div>`;
+      $("rHear").onclick=()=>speak(w,0.75);$("rSkip").onclick=()=>{skip=true;draw("Skipped.");speechSynthesis.cancel();if(pCancel)pCancel([])};
+      if(tap){const b=document.createElement("button");b.className="btn primary bigtap";b.type="button";b.textContent=`🎤 Tap, then say “${w}”`;
+        b.onclick=()=>{b.remove();draw("Your turn! Say it.");tap()};box.querySelector(".practice").appendChild(b)}};
+    box.scrollIntoView({behavior:"smooth",block:"center"});
+    for(let r=0;r<3&&alive()&&!skip;r++){
+      draw(r===0?"Listen to Emma…":"Again! Listen…");
+      if(IS_IOS)pEarStop();
+      await speak(r===0?`Let's say it together. ${w}.`:`${w}.`,0.8);if(!alive()||skip)break;
+      draw(SR?"Your turn! Say it.":"Your turn! Say it out loud.");
+      const alts=SR?await listenOnce(go=>draw("Tap the button, then say the word.",null,go)):[w];if(!alive()||skip)break;
+      const ok=SR?heardMatches(alts,w):true;marks.push(ok);
+      draw(ok?["Yes!","Great!","Perfect!"][r]:`I heard “${alts[0]||"nothing"}”. Listen again.`,ok?"ok":"red");
+      if(ok)chime(false);await new Promise(z=>setTimeout(z,450));
+    }
+    const k=w.toLowerCase();if(marks.filter(Boolean).length>=2)reviewCredit[k]=(reviewCredit[k]||0)+1;
+    if(alive()&&marks.length===3)hoot("party",marks.every(Boolean)?`You said <b>${w}</b> 3 times!`:`Good work on <b>${w}</b>!`);
+  }
+  pEarStop();saveDB();renderWords();if(alive())box.hidden=true;
+}
+/* ---------- timer ---------- */
+function resumeClock(){t0=performance.now()-elapsed*1000;clearInterval(tick);tick=setInterval(()=>{elapsed=(performance.now()-t0)/1000;renderBooth()},250)}
+function pauseClock(){if(tick)elapsed=(performance.now()-t0)/1000;clearInterval(tick);tick=null}
+async function startReading(){
+  hoot("cheer",elapsed>0?pick(KEEP):pick(CHEERS));
+  $("resultBox").hidden=true;$("practiceBox").hidden=true;ended=false;running=true;
+  if(SR&&!listening){teacherTalking=true;startRec()}   // must start inside the tap on iPad/iPhone
+  if("wakeLock" in navigator)navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{});
+  if(elapsed===0&&running&&!(IS_IOS&&SR)){setStatus("Teacher is talking…");teacherTalking=true;renderBooth();await speak("Ready? Start reading when you see the blue box.")}
+  muteUntil=Date.now()+350;teacherTalking=false;
+  if(!running)return;
+  resumeClock();
+  if(SR){if(!listening&&$("resumeMic").hidden)startRec();if(listening)setStatus("Listening… start reading out loud.");else if(!$("resumeMic").hidden){pauseClock();renderBooth()}}else setStatus("Timing. Tap any word she reads wrong.");
+  clearTimeout(deafTimer);deafTimer=setTimeout(()=>{if(running&&!heardAny)$("deafBox").hidden=false},10000);
+  paint();
+}
+function pause(){running=false;if(reviewing){reviewToken++;reviewing=false;if(pCancel)pCancel([]);pEarStop();$("reviewBox").hidden=true}pauseClock();stopRec();$("resumeMic").hidden=true;if(wake){wake.release().catch(()=>{});wake=null}setStatus("Paused. Press <b>Keep reading</b> to go on.");paint()}
+function resetAttempt(){pause();reviewedParas=new Set();reviewCredit={};clearTimeout(deafTimer);heardAny=false;$("deafBox").hidden=true;elapsed=0;st=newState();manual=new Map();history=[];ended=false;$("resultBox").hidden=true;$("practiceBox").hidden=true;$("heard").textContent="";setStatus("Press <b>Start reading</b>, then read out loud.")}
+
+async function finish(fromClick,grownup){
+  if(fromClick)ensureFolderPermission();
+  running=false;pauseClock();stopRec();clearTimeout(deafTimer);$("resumeMic").hidden=true;if(wake){wake.release().catch(()=>{});wake=null}
+  if(!heardAny&&!grownup){
+    const box=$("resultBox");box.hidden=false;box.className="result fail";
+    box.innerHTML=`<h3>The teacher couldn’t hear her.</h3>
+     <p>The microphone didn’t pick up any reading, so this try doesn’t count and the next part stays locked.</p>
+     <p class="hint">Check that the microphone is allowed for this page, then read again. If a grown-up listened and tapped every word she got wrong, they can count it instead.</p>
+     <div class="row-actions" style="margin-top:4px">
+       <button class="btn primary" id="againBtn" type="button">Read this part again</button>
+       <button class="btn small" id="grownBtn" type="button">A grown-up listened — count this try</button>
+     </div>`;
+    $("againBtn").onclick=()=>{resetAttempt();paint();$("booth").scrollIntoView({behavior:"smooth"})};
+    $("grownBtn").onclick=()=>finish(false,true);
+    setStatus("The teacher couldn’t hear. Try again.");$("heard").textContent="";paint();
+    box.scrollIntoView({behavior:"smooth",block:"nearest"});
+    return}
+  if(st.buffer.length&&units[st.pos]&&!units[st.pos].num&&units.length-st.pos<=3){st.marks.set(st.pos,{s:"err",heard:st.buffer.join(" ")});st.pos++;st.buffer=[]}
+  if(settings.mode==="para"&&!grownup){const left=finishedParas(true);left.forEach(pi=>reviewedParas.add(pi));const lw=wrongWordsIn(left);
+    if(lw.length){setStatus("Let’s practice the red words.");reviewing=true;renderBooth();const tok=++reviewToken;await reviewWords(lw,tok);reviewing=false;renderBooth();if(tok!==reviewToken)return}}
+  const ms=mistakes(),n=ms.length,lim=limitOf(),secs=Math.round(elapsed);
+  const left=units.length-st.pos;const readAll=grownup||!SR||left<=3;
+  const okErr=n<=MAX_ERR,okTime=secs<=lim,pass=okErr&&okTime&&readAll;
+  const tryNo=DB.tries.filter(r=>r.lesson===L&&r.part===cur).length+1;
+  const date=new Date().toISOString();
+  DB.tries.push({date,lesson:L,part:cur,partTitle:P().title,lessonTitle:LESSONS[L].title,try:tryNo,secs,limit:lim,errors:n,pass,finished:readAll,mistakes:ms.map(m=>({word:m.word,heard:m.heard}))});
+  ms.forEach(m=>{const k=m.word.toLowerCase().replace(/[’']s$/,"");if(!k)return;
+    const w=DB.words[k]||(DB.words[k]={word:m.word.replace(/[’']s$/,""),missed:0,heard:[],last:"",lesson:L,ok:0});
+    w.missed++;w.last=date;w.lesson=L;w.ok=Math.max(0,(w.ok||0)-1);if(reviewCredit[k]){w.ok+=reviewCredit[k];w.lastPractice=date;delete reviewCredit[k]}if(m.heard&&!w.heard.includes(m.heard)){w.heard.unshift(m.heard);w.heard=w.heard.slice(0,4)}});
+  saveDB();
+  const lastPart=cur===LESSONS[L].parts.length-1;
+  const nextLesson=ORDER[ORDER.indexOf(L)+1];
+  const stars=starsFor(DB.tries[DB.tries.length-1]);
+  const newSticker=pass&&lessonDone(L)&&DB.tries.filter(r=>r.lesson===L&&r.pass&&r.part===cur).length===1&&lastPart;
+  const goalNow=pass&&passedToday()===DAILY_GOAL;
+  const why=[];if(!readAll)why.push("she didn’t finish the part");if(!okErr)why.push(`${n} mistakes (the most allowed is ${MAX_ERR})`);if(!okTime)why.push(`${fmt(secs)}, over the ${fmt(lim)} limit`);
+  const box=$("resultBox");box.hidden=false;box.className="result "+(pass?"pass":"fail");
+  box.innerHTML=`${pass?`<div class="starsrow" aria-label="${stars} of 3 stars">${[1,2,3].map(i=>`<span class="${i<=stars?"":"off"}">⭐</span>`).join("")}</div>`:""}
+   <h3>${pass?(lastPart?"Lesson complete! Great reading.":"Passed! Great reading."):"Let’s read this part again."}</h3>
+   ${newSticker?`<div class="newsticker"><span class="big">${stickerFor(L)}</span><div><b>New sticker!</b><br>Lesson ${L} is in your sticker book.</div></div>`:""}
+   ${goalNow?`<p><b>🎯 Today’s goal done!</b> 2 parts passed today.</p>`:""}
+   ${pass&&stars<3?`<p class="hint" style="margin:0">Read it with ${stars===2?"no":"1 or no"} mistakes for ${stars===2?"3 stars":"more stars"}.</p>`:""}
+   <p>${pass?`${fmt(secs)} with ${n} mistake${n===1?"":"s"}.`:"Reason: "+why.join(" and ")+"."}</p>
+   ${pass?"":`<p>The next part opens when she passes this one.</p>`}
+   ${ms.length?`<p>Words to practice:</p><div class="missed">${ms.map(m=>`<span><b>${m.word}</b>${m.heard?` <i>she said “${m.heard}”</i>`:" <i>skipped</i>"}</span>`).join("")}</div>`:""}
+   <div class="row-actions" style="margin-top:4px">
+     ${ms.length?'<button class="btn primary" id="pracBtn" type="button">Practice these words now</button>':""}
+     ${pass&&!lastPart?'<button class="btn '+(ms.length?"":"primary")+'" id="nextBtn" type="button">Next part</button>':""}
+     ${pass&&lastPart&&nextLesson?'<button class="btn '+(ms.length?"":"primary")+'" id="nextLessonBtn" type="button">Go to Lesson '+nextLesson+'</button>':""}
+     <button class="btn" id="againBtn" type="button">Read this part again</button>
+   </div>`;
+  $("againBtn").onclick=()=>{resetAttempt();paint();$("booth").scrollIntoView({behavior:"smooth"})};
+  const nb=$("nextBtn");if(nb)nb.onclick=()=>{cur++;settings.part=cur;saveSettings();resetAttempt();renderAll();scrollTo({top:0,behavior:"smooth"})};
+  const nl=$("nextLessonBtn");if(nl)nl.onclick=()=>{L=nextLesson;cur=0;settings.lesson=L;settings.part=0;saveSettings();resetAttempt();renderAll();scrollTo({top:0,behavior:"smooth"})};
+  const pb=$("pracBtn");if(pb)pb.onclick=()=>practice(ms.map(m=>m.word.replace(/[’']s$/,"")),$("practiceBox"));
+  if(pass&&lastPart)$("questions").open=true;
+  setStatus(pass?"Done!":"Let’s try again.");$("heard").textContent="";
+  paint();renderParts();renderLessons();renderWords();renderTries();renderFun();
+  if(pass){moveRocket(units.length);hoot("party",newSticker?`You won the <b>${stickerFor(L)}</b> sticker!`:pick(PASS_LINES));chime(stars===3||newSticker);if(stars===3||lastPart||goalNow)confetti()}
+  else hoot("think",pick(TRY_AGAIN));
+  box.scrollIntoView({behavior:"smooth",block:"nearest"});
+  const msg=pass?(lastPart?`Wonderful${NM()}! You finished the whole lesson.`:`Great job${NM()}! You passed with ${n} mistake${n===1?"":"s"}.`):(!readAll?"Let's finish the whole part next time.":!okErr?`You had ${n} mistakes. Let's practice the hard words and read it again.`:`Good reading, but a little slow. Let's try again a bit faster.`);
+  await speak(msg);
+  if(settings.mode==="end"&&ms.length){await speak("Let's look at the words you missed.");practice(ms.map(m=>m.word.replace(/[’']s$/,"")),$("practiceBox"))}
+}
+
+/* ---------- hear it first ---------- */
+let modelPlaying=false;
+async function modelRead(){
+  if(running)return;
+  if(modelPlaying){modelPlaying=false;speechSynthesis.cancel();$("modelBtn").textContent="Hear it read first";return}
+  modelPlaying=true;$("modelBtn").textContent="Stop";
+  const ps=$("text").querySelectorAll("p,h3");
+  for(const p of ps){if(!modelPlaying)break;
+    const sentences=p.textContent.match(/[^.!?]+[.!?]+[”"]?|\S[^.!?]*$/g)||[p.textContent];
+    for(const s of sentences){if(!modelPlaying)break;p.style.background="var(--steel-soft)";await speak(s.trim(),0.85)}
+    p.style.background=""}
+  modelPlaying=false;$("modelBtn").textContent="Hear it read first";
+}
+
+/* ---------- word practice ---------- */
+let pEar=null,pWait=null,pDead=false,pSess=0,pTapUI=null,pCancel=null;const pTaint=new Set();
+function pEarStart(){
+  if(!SR||pEar)return;pDead=false;const r=new SR();r.lang="en-US";r.continuous=!IS_ANDROID;r.interimResults=true;r.maxAlternatives=5;pEar=r;pSess++;
+  r.onresult=e=>{if(pEar!==r)return;for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];const k=pSess+":"+i;
+    if(!pWait){pTaint.add(k);continue}if(pTaint.has(k)||!res.isFinal)continue;
+    const alts=[];for(let a=0;a<res.length;a++)alts.push(res[a].transcript);const w=pWait;pWait=null;w(alts)}};
+  r.onerror=e=>{if(pEar!==r)return;if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){pDead=true;if(pTapUI)pTapUI()}};
+  r.onend=()=>{if(pEar===r&&!pDead)setTimeout(()=>{if(pEar!==r)return;try{pSess++;r.start()}catch(_){pDead=true;if(pTapUI)pTapUI()}},IS_ANDROID?40:200)};
+  try{r.start()}catch(_){pDead=true}
+}
+function pEarStop(){const r=pEar;pEar=null;pWait=null;if(r){try{r.onend=null;r.abort()}catch(_){}}}
+function listenOnce(showTap){return new Promise(res=>{if(!SR)return res([]);
+  let done=false,t1=null,t2=null,taps=0;
+  const fin=a=>{if(done)return;done=true;clearTimeout(t1);clearTimeout(t2);if(pWait===fin)pWait=null;if(pCancel===fin)pCancel=null;pTapUI=null;res(a)};pCancel=fin;
+  const arm=()=>{clearTimeout(t1);clearTimeout(t2);t1=setTimeout(()=>{if(!done)pWait=fin},300);t2=setTimeout(()=>fin([]),6300)};
+  pTapUI=()=>{if(done)return;clearTimeout(t1);clearTimeout(t2);pWait=null;
+    if(!showTap||taps>=3)return fin([]);
+    showTap(()=>{taps++;pEarStart();if(pDead)return fin([]);arm()})};
+  if(!pEar||pDead)pTapUI();else arm();
+})}
+function heardMatches(alts,word){const w=norm(word);return alts.some(a=>a.split(/\s+/).map(norm).some(h=>h===w||similar(h,w)||(w.endsWith("s")&&h===w.slice(0,-1))))}
+async function practice(words,box){
+  words=[...new Set(words.filter(Boolean))];if(!words.length)return;
+  stopRec();if(!IS_IOS)pEarStart();   // start the mic inside the tap; on iPad each word gets its own tap
+  box.hidden=false;let i=0,stopped=false;
+  const draw=(w,sub,cls)=>{box.innerHTML=`<div class="practice"><div class="sub">Word ${Math.min(i+1,words.length)} of ${words.length}</div><div class="big ${cls||""}">${w}</div><div class="sub">${sub}</div><div class="row-actions"><button class="btn small" id="pHear" type="button">Hear it</button><button class="btn small" id="pStop" type="button">Stop practice</button></div></div>`;
+    $("pHear").onclick=()=>speak(w,0.75);$("pStop").onclick=()=>{stopped=true;box.hidden=true;pEarStop();speechSynthesis.cancel()}};
+  box.scrollIntoView({behavior:"smooth",block:"nearest"});
+  for(;i<words.length&&!stopped;i++){const w=words[i];let right=false;
+    for(let attempt=0;attempt<2&&!stopped&&!right;attempt++){
+      draw(w,attempt?"Listen, then try again.":"Listen, then say it.");
+      if(IS_IOS)pEarStop();   // the teacher's voice would cut off the mic on iPad
+      await speak(attempt?`Listen: ${w}. Now you say it.`:`Say this word: ${w}.`,0.8);if(stopped)break;
+      draw(w,SR?"Listening…":"Say it out loud.");
+      const alts=await listenOnce(go=>{if(stopped)return;draw(w,"Tap the button, then say the word.");
+        const b=document.createElement("button");b.className="btn primary bigtap";b.type="button";b.textContent="🎤 Tap, then say it";
+        b.onclick=()=>{b.remove();draw(w,"Listening…");go()};box.querySelector(".practice").appendChild(b)});if(stopped)break;
+      right=SR?heardMatches(alts,w):true;
+      draw(w,right?"Yes! That’s right.":`I heard “${alts[0]||"nothing"}”.`,right?"ok":"no");if(right){chime(false);hoot("cheer",pick(PASS_LINES))}
+      await speak(right?["Great!","Yes, that's right!","Well done!"][i%3]:"Not quite.");
+    }
+    const k=w.toLowerCase();const r_=DB.words[k];
+    if(r_){if(right)r_.ok=(r_.ok||0)+1;r_.lastPractice=new Date().toISOString();saveDB();renderWords()}
+  }
+  pEarStop();saveDB();renderWords();
+  if(!stopped){box.innerHTML=`<div class="practice"><div class="big ok">All done!</div><div class="sub">Words she gets right twice move to “learned”.</div></div>`;await speak("All done. Great practice!")}
+}
+
+/* ---------- tables ---------- */
+const dshort=iso=>iso?new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
+function renderWords(){
+  const show=$("showLearned").checked;
+  const all=Object.values(DB.words).sort((a,b)=>((a.ok||0)>=2)-((b.ok||0)>=2)||b.missed-a.missed||String(b.last).localeCompare(String(a.last)));
+  const active=all.filter(w=>(w.ok||0)<2);
+  const c=$("trickyCount");c.hidden=!active.length;c.textContent=active.length;
+  const rows=(show?all:active);
+  $("wordRows").innerHTML=rows.length?rows.map(w=>`<tr><td class="word">${w.word}</td><td>${w.missed}×</td><td>${w.heard.length?w.heard.map(h=>"“"+h+"”").join(", "):"<span class='empty'>skipped</span>"}</td><td>${dshort(w.last)} · L${w.lesson}</td><td>${(w.ok||0)>=2?'<span class="pill pass">Learned</span>':w.ok?'<span class="pill mid">1 of 2</span>':'<span class="pill fail">Not yet</span>'}</td><td><button class="btn small" data-hear="${w.word}" type="button">Hear</button></td></tr>`).join("")
+    :`<tr><td colspan="6" class="empty">${all.length?"All tricky words are learned. Tick “Show learned words” to see them.":"No mistakes yet. Words she misreads will show up here."}</td></tr>`;
+  $("wordRows").querySelectorAll("[data-hear]").forEach(b=>b.onclick=()=>speak(b.dataset.hear,0.75));
+}
+function renderTries(){
+  const t=[...DB.tries].reverse();
+  $("tryRows").innerHTML=t.length?t.map(r=>`<tr><td>${dshort(r.date)}</td><td>L${r.lesson} · ${r.part+1}. ${r.partTitle}<br><span class="empty">try ${r.try}</span></td><td>${fmt(r.secs)} / ${fmt(r.limit)}</td><td>${r.errors}</td><td><span class="pill ${r.pass?"pass":"fail"}">${r.pass?"Passed":"Read again"}</span></td><td>${r.mistakes.map(m=>m.word).join(", ")||"<span class='empty'>none</span>"}</td></tr>`).join("")
+    :`<tr><td colspan="6" class="empty">No tries yet.</td></tr>`;
+}
+
+/* ---------- records out ---------- */
+const csvCell=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+function logCSV(){return ["date,lesson,lesson_title,part,part_title,try,seconds,limit_seconds,mistakes,result,finished,missed_words,what_she_said"].concat(
+  DB.tries.map(r=>[r.date,r.lesson,r.lessonTitle||"",r.part+1,r.partTitle,r.try,r.secs,r.limit,r.errors,r.pass?"passed":"read again",r.finished?"yes":"no",r.mistakes.map(m=>m.word).join("; "),r.mistakes.map(m=>m.word+"="+(m.heard||"(skipped)")).join("; ")].map(csvCell).join(","))).join("\r\n")}
+function wordsCSV(){return ["word,times_missed,she_said,last_missed,lesson,practice_correct,learned"].concat(
+  Object.values(DB.words).map(w=>[w.word,w.missed,w.heard.join(" | "),w.last,w.lesson,w.ok||0,(w.ok||0)>=2?"yes":"no"].map(csvCell).join(","))).join("\r\n")}
+function summaryText(){
+  const today=new Date().toDateString();
+  const tt=DB.tries.filter(r=>new Date(r.date).toDateString()===today);
+  const passed=tt.filter(r=>r.pass).length;
+  const tricky=Object.values(DB.words).filter(w=>(w.ok||0)<2).sort((a,b)=>b.missed-a.missed).slice(0,10).map(w=>`${w.word} (${w.missed}×)`);
+  const lessonsDone=ORDER.filter(lessonDone);
+  return `${settings.name?settings.name+"'s reading":"Reading progress"} (Read with Emma) — ${new Date().toLocaleDateString()}\nToday: ${tt.length} tries, ${passed} parts passed.\nLessons finished: ${lessonsDone.length?lessonsDone.join(", "):"none yet"}.\nTricky words: ${tricky.join(", ")||"none"}.`;
+}
+async function shareProgress(){
+  const text=summaryText();
+  const files=[new File(["﻿"+logCSV()],"reading-log.csv",{type:"text/csv"}),new File(["﻿"+wordsCSV()],"tricky-words.csv",{type:"text/csv"})];
+  try{
+    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({title:"Read with Emma progress",text,files});return}
+    if(navigator.share){await navigator.share({title:"Read with Emma progress",text});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  downloadCSV();
+}
+async function downloadCSV(){
+  let dls=null;try{dls=window.claude&&await window.claude.use("downloads")}catch(e){}
+  if(dls){
+    for(const [name,txt] of [["reading-log.csv",logCSV()],["tricky-words.csv",wordsCSV()]]){
+      try{await dls.save({filename:name,data:"﻿"+txt})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){await new Promise(r=>setTimeout(r,1500));try{await dls.save({filename:name,data:"﻿"+txt})}catch(_){}}}
+    }
+    return}
+  const dl=(name,txt)=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+txt],{type:"text/csv"}));a.download=name;a.click()};
+  dl("reading-log.csv",logCSV());setTimeout(()=>dl("tricky-words.csv",wordsCSV()),400)}
+
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("rodina-reading",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbGet(k){try{const db=await idb();return await new Promise(res=>{const q=db.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})}catch(e){return null}}
+async function idbSet(k,v){try{const db=await idb();db.transaction("kv","readwrite").objectStore("kv").put(v,k)}catch(e){}}
+let dirHandle=null;
+async function showFolderState(){const el=$("folderState");if(!dirHandle){el.textContent="Not connected yet.";return}
+  let p="prompt";try{p=await dirHandle.queryPermission({mode:"readwrite"})}catch(e){}
+  el.textContent=p==="granted"?`Saving to “${dirHandle.name}”.`:`Folder “${dirHandle.name}”: will ask permission at the next save.`}
+async function ensureFolderPermission(){if(!dirHandle)return;try{if(await dirHandle.queryPermission({mode:"readwrite"})!=="granted")await dirHandle.requestPermission({mode:"readwrite"})}catch(e){}showFolderState()}
+async function writeFile(name,text){const fh=await dirHandle.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(text);await w.close()}
+async function saveToFolder(ask){if(!dirHandle)return;try{
+  let p=await dirHandle.queryPermission({mode:"readwrite"});if(p!=="granted"&&ask)p=await dirHandle.requestPermission({mode:"readwrite"});
+  if(p!=="granted")return;await writeFile("reading-log.csv","﻿"+logCSV());await writeFile("tricky-words.csv","﻿"+wordsCSV());
+  await writeFile("reading-data.json",JSON.stringify(DB,null,1));
+  $("folderState").textContent=`Saved to “${dirHandle.name}” at ${new Date().toLocaleTimeString()}.`}catch(e){$("folderState").textContent="Couldn’t save to the folder: "+e.message}}
+
+/* ---------- wiring ---------- */
+const tabs={tabRead:"viewRead",tabLessons:"viewLessons",tabWords:"viewWords",tabStick:"viewStick",tabProg:"viewProg"};
+function showTab(t){Object.keys(tabs).forEach(o=>{$(o).setAttribute("aria-selected",o===t);$(tabs[o]).hidden=o!==t;$(tabs[o]).style.display=o===t?"grid":"none"})}
+
+/* ================= FUN: Emma, rocket, stars, stickers, streak, confetti ================= */
+const STICKERS=["🦄","🐉","🦊","🐼","🦁","🐙","🦋","🐢","🦉","🐬","🦕","🐝","🦜","🐨","🐧","🦒","🐸","🦔","🐳","🦩","🐯","🐞","🦀","🐿️","🌈","🚀","🏰","🎈","🍩","⭐"];
+const stickerFor=l=>STICKERS[(ORDER.indexOf(l)+STICKERS.length)%STICKERS.length];
+const starsFor=r=>!r.pass?0:r.errors===0?3:r.errors===1?2:1;
+function bestStars(){const best={};DB.tries.forEach(r=>{const k=r.lesson+":"+r.part;best[k]=Math.max(best[k]||0,starsFor(r))});return best}
+const totalStars=()=>Object.values(bestStars()).reduce((a,b)=>a+b,0);
+const dayKey=d=>{const x=new Date(d);return x.getFullYear()+"-"+(x.getMonth()+1)+"-"+x.getDate()};
+function streakDays(){const days=new Set(DB.tries.filter(r=>r.pass).map(r=>dayKey(r.date)));let n=0;const d=new Date();
+  if(!days.has(dayKey(d)))d.setDate(d.getDate()-1);
+  while(days.has(dayKey(d))){n++;d.setDate(d.getDate()-1)}return n}
+const DAILY_GOAL=2;
+const passedToday=()=>DB.tries.filter(r=>r.pass&&dayKey(r.date)===dayKey(Date.now())).length;
+function renderFun(){
+  $("starTotal").textContent=totalStars();
+  const s=streakDays();$("streak").textContent=s;$("streakS").textContent=s===1?"":"s";
+  const g=Math.min(DAILY_GOAL,passedToday());$("goalTxt").textContent=g+"/"+DAILY_GOAL;$("goalBar").style.width=(g/DAILY_GOAL*100)+"%";
+  const got=ORDER.filter(lessonDone);$("stickCount").textContent=got.length;
+  $("stickerGrid").innerHTML=ORDER.map(l=>{const has=lessonDone(l);
+    return `<div class="sticker ${has?"got":"locked"}"><span class="e">${has?stickerFor(l):"❔"}</span><small>Lesson ${l}</small>${has?"":`<small>${lessonPassedCount(l)} of ${LESSONS[l].parts.length} parts</small>`}</div>`}).join("");
+}
+/* Emma */
+let hootTimer=null;
+function hoot(mood,html,say){const o=$("owl");o.classList.remove("cheer","party","oops","think");void o.getBoundingClientRect();if(mood)o.classList.add(mood);
+  $("bubble").innerHTML=html;if(say)speak(say)}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const CHEERS=["You can do it! Start at the blue box.","Rocket ready! Read out loud and watch it fly.","I’m all ears… well, all feathers!","Let’s go! Nice and clear."];
+const KEEP=["Keep going, you’re flying!","Super reading!","The rocket is zooming!","Wow, look at you go!"];
+const OOPS=["Oops! Tricky word. You’ve got this.","Hoo-hoo, that one’s sneaky!","Almost! Listen and try it again."];
+const PASS_LINES=["Hoo-ray! You did it!","Owl-standing reading!","Fantastic! Give me a wing-five!","You’re a reading superstar!"];
+const TRY_AGAIN=["Almost there! Let’s try once more.","Good try! Practice makes perfect.","You’re getting better every time!"];
+const JOKES=[["Why did the owl invite friends over?","Because he didn’t want to be owl by himself!"],
+ ["What do you call a sleeping dinosaur?","A dino-snore!"],["Why did the book join the police?","It wanted to go under cover!"],
+ ["What do owls say on Halloween?","Happy Owl-ween!"],["Why can’t you trust an atom?","Because they make up everything!"],
+ ["What did one wall say to the other?","Meet you at the corner!"],["Why did the cookie go to the doctor?","Because it felt crummy!"],
+ ["What has words but never talks?","A book!"],["Why are fish so smart?","Because they live in schools!"],
+ ["What do you call a bear with no teeth?","A gummy bear!"]];
+let jokeI=Math.floor(Math.random()*JOKES.length);
+function tellJoke(){if(running)return;const [q,a]=JOKES[jokeI++%JOKES.length];
+  hoot("cheer",`${q}<br><b>${a}</b>`);speak(q+" "+a)}
+function lookAt(pct){const dx=(pct-0.5)*6;$("pupL").setAttribute("cx",37+dx);$("pupR").setAttribute("cx",63+dx)}
+/* rocket */
+function moveRocket(pos){const pct=units.length?Math.min(1,pos/units.length):0;$("tripFill").style.width=(pct*100)+"%";$("rocket").style.left=`calc(${pct*100}% - ${pct*24}px + 12px)`;lookAt(pct)}
+/* chime: tiny tune made in the browser (no files) */
+let actx=null;
+function audio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx}catch(e){return null}}
+function chime(big){const a=audio();if(!a)return;const notes=big?[523,659,784,1047,1319]:[523,659,784];
+  notes.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.type="triangle";o.frequency.value=f;
+    const t=a.currentTime+i*.12;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+.35);
+    o.connect(g).connect(a.destination);o.start(t);o.stop(t+.4)})}
+/* confetti */
+function confetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const c=$("confetti");c.hidden=false;
+  const ctx=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const cs=getComputedStyle(document.documentElement);
+  const cols=["--steel","--ok","--gold","--err","--beak"].map(v=>cs.getPropertyValue(v).trim()||"#e8a400");
+  const ps=Array.from({length:140},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:pick(cols)}));
+  const t0=performance.now();(function f(t){ctx.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.r+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore()});
+    if(t-t0<3200)requestAnimationFrame(f);else{ctx.clearRect(0,0,c.width,c.height);c.hidden=true}})(t0)}
+/* ---------- iPad: speech must be unlocked by a tap ---------- */
+let ttsUnlocked=false;
+addEventListener("pointerdown",()=>{if(ttsUnlocked||running||!("speechSynthesis" in window))return;ttsUnlocked=true;
+  try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}audio()},true);
+/* ---------- microphone setup ---------- */
+const SITE_URL="https://zeriab2020.github.io/rodina-reads/";
+const SITE_MSG=`<b>This link can’t use the microphone.</b> Open the Read with Emma website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
+function micBlockedByPage(){try{const fp=document.permissionsPolicy||document.featurePolicy;return !!(fp&&fp.allowsFeature&&!fp.allowsFeature("microphone"))}catch(e){return false}}
+function micErrorText(er){
+  if(er==="service-not-allowed"&&IS_IOS)return "<b>Dictation is turned off on this iPad.</b> The teacher needs it to listen. Open <b>Settings › General › Keyboard</b>, turn on <b>Enable Dictation</b>, then come back and reload this page.";
+  if(er==="service-not-allowed")return "<b>Speech recognition is turned off in this browser.</b> Use Safari on an iPad, or Chrome on Android or a computer.";
+  if(er==="audio-capture")return "<b>The microphone is busy or missing.</b> Close other apps using it (FaceTime, Zoom, a video call), then press Start reading again.";
+  return "<b>The microphone is blocked for this page.</b> "+micHelp();}
+function micHelp(){return IS_ANDROID?"On Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow, then reload."
+  :/iPad|iPhone|Macintosh/.test(navigator.userAgent)&&"ontouchend" in document?"On iPad: tap <b>aA</b> in the address bar › Website Settings › Microphone › Allow, then reload."
+  :"Click the icon left of the address bar › Microphone › Allow, then reload."}
+async function micSetup(){
+  const card=$("micCard"),msg=$("micMsg");
+  if(!SR){msg.innerHTML="<b>This browser can’t listen.</b> Open this page in <b>Safari</b> on an iPad, or <b>Chrome</b> on Android or a computer.";
+    $("micBtn").hidden=true;$("micSkip").hidden=false;return false}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||micBlockedByPage()){
+    msg.innerHTML=SITE_MSG;
+    $("micBtn").hidden=true;$("micSkip").hidden=false;return false}
+  msg.textContent="Asking for the microphone…";
+  try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());
+    store.set("rodina.micok",true);card.hidden=true;speak("Thank you. Now I can hear you.");return true}
+  catch(e){
+    if(e&&(e.name==="NotAllowedError"||e.name==="SecurityError")){
+      msg.innerHTML=micBlockedByPage()||e.name==="SecurityError"?SITE_MSG:"<b>The microphone is turned off for this page.</b> "+micHelp();
+    }else if(e&&e.name==="NotFoundError"){msg.innerHTML="<b>No microphone found</b> on this device."}
+    else msg.innerHTML="<b>The microphone didn’t turn on.</b> "+micHelp();
+    $("micSkip").hidden=false;return false}
+}
+function wire(){
+  if(!store.get("rodina.micok",false)||micBlockedByPage()||!SR){$("micCard").hidden=false;if(micBlockedByPage()||!SR)micSetup()}
+  $("micBtn").onclick=micSetup;
+  $("micSkip").onclick=()=>{$("micCard").hidden=true};
+  $("startBtn").onclick=()=>running?pause():startReading();
+  $("doneBtn").onclick=()=>finish(true);
+  $("modelBtn").onclick=modelRead;
+  $("undoBtn").onclick=()=>{const d=history.pop();if(d===undefined)return;manual.delete(d);paint()};
+  $("resumeMic").onclick=()=>{$("resumeMic").hidden=true;if(!running)return;startRec();if(listening){muteUntil=Date.now()+250;resumeClock();setStatus("Listening… keep reading.")}paint()};
+  if(Object.keys(settings.limits||{}).length){settings.limits={};saveSettings()}   // forget any old changed limits
+  $("chooseBtn").onclick=()=>showTab("tabLessons");
+  if(settings.name===undefined)$("nameCard").hidden=false;greet();$("nameSet").value=settings.name||"";
+  $("nameCard").onsubmit=e=>{e.preventDefault();saveName($("nameIn").value)};$("nameSkip").onclick=()=>saveName("");
+  $("nameSet").onchange=e=>saveName(e.target.value);
+  $("owl").onclick=tellJoke;$("owl").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tellJoke()}};
+  Object.keys(tabs).forEach(t=>$(t).onclick=()=>showTab(t));
+  showTab("tabRead");
+  $("practiceAllBtn").onclick=()=>{const list=Object.values(DB.words).filter(w=>(w.ok||0)<2).sort((a,b)=>b.missed-a.missed).slice(0,12).map(w=>w.word);
+    if(!list.length){speak("No tricky words right now. Great job!");return}practice(list,$("practiceBox2"))};
+  $("showLearned").onchange=renderWords;
+  $("shareBtn").onclick=shareProgress;$("exportBtn").onclick=downloadCSV;
+  $("voiceSel").onchange=e=>{settings.voice=e.target.value;saveSettings();speak(`Hello${NM()}. I'm ready to listen.`)};
+  $("modeSel").value=settings.mode;$("modeSel").onchange=e=>{settings.mode=e.target.value;saveSettings()};
+  $("rateSel").value=String(settings.rate);$("rateSel").onchange=e=>{settings.rate=Number(e.target.value);saveSettings()};
+  $("folderBtn").onclick=async()=>{try{dirHandle=await window.showDirectoryPicker({mode:"readwrite"});await idbSet("dir",dirHandle);
+    if(!DB.tries.length){try{let fh;try{fh=await dirHandle.getFileHandle("reading-data.json")}catch(_){fh=await dirHandle.getFileHandle("rodina-reading-data.json")}const f=await fh.getFile();const d=JSON.parse(await f.text());if(d&&d.tries){DB=d;store.set("rodina.db",DB);renderAll()}}catch(e){}}
+    await saveToFolder(true)}catch(e){}};
+}
+boot();
+</script>
+</body>
+</html>
+
+</body></html>
